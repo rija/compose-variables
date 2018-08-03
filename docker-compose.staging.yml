@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  test:
+    env_file:
+      - ./staging.env
+  prod:
+    env_file:
+      - ./staging.env
+  magic:
+    env_file:
+      - ./staging.env
+  black-magic:
+    container_name: staging_box
+    env_file:
+      - ./staging.env

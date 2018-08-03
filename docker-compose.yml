@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+
+# .env vs environment vs env_file
+  test:
+    image: bash:4
+    entrypoint: /vars.sh
+    env_file:
+      - ./test.env
+    environment:
+      - YUMMY=http://${TARGET}/$${FOO} # TARGET interpolated in compose file, YUMMY will be available in the container with FOO passed asis
+    volumes:
+      - ./vars.sh:/vars.sh
+      - ./:${TARGET}/${USER} # TARGET is from .env, USER is from exported env variables
+  prod:
+    image: bash:4
+    entrypoint: /vars.sh
+    env_file:
+      - ./prod.env
+    environment:
+      - YUMMY=http://${TARGET}/$${FOO}
+    volumes:
+      - ./vars.sh:/vars.sh
+      - ./:${TARGET}
+  magic:
+    image: bash:4
+    entrypoint: /vars.sh
+    env_file:
+      - .env
+    environment:
+      - YUMMY=http://${TARGET}/$${FOO}/${FROM_CLI} #to populate FROM_CLI, call FROM_CLI=bam docker-compose up magic
+    volumes:
+      - ./vars.sh:/vars.sh
+      - ./:${TARGET}
+
+  black-magic:
+    image: bash:4
+    container_name: development_box # different container name for each environment
+    entrypoint: /vars.sh
+    env_file:
+      - .env
+    environment:
+      - YUMMY=http://${TARGET}/$${FOO}
+    volumes:
+      - ./vars.sh:/vars.sh
+      - ./:${TARGET}
+
+# common in-container var to re-use across services in compose v3+ (because 'extends' has been removed in v3+)
+  queen-bee:
+    image: bash:4
+    entrypoint: /hive.sh
+    volumes:
+      - &entrypoint ./hive.sh:/hive.sh
+    environment: &common_env
+      ROLE:  'Queen'
+      API_URL:  'https://www.big-hive.com'
+
+  worker-bee:
+    image: bash:4
+    entrypoint: /hive.sh
+    volumes:
+      - *entrypoint
+    environment:
+      <<: *common_env
+      ROLE: 'Worker-bee'
+
+
+  sentinel-bee:
+    image: bash:4
+    entrypoint: /hive.sh
+    volumes:
+      - *entrypoint
+    environment:
+      <<: *common_env
+      ROLE: 'Sentinel-bee'
+
+
